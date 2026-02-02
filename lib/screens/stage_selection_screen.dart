@@ -43,12 +43,15 @@ class StageSelectionScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Chess Master',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+              Expanded(
+                child: Text(
+                  'Chess Master',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
               ),
               IconButton(
                 onPressed: () => _showSettings(context),

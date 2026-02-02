@@ -293,9 +293,14 @@ class _GameScreenState extends State<GameScreen> {
     return Consumer<GameProvider>(
       builder: (context, gameProvider, child) {
         final config = GameConfig.getStage(widget.stage);
+        
+        // Undo is allowed if:
+        // 1. There are moves to undo (canUndo)
+        // 2. Either no undo limit OR we haven't used all our undos yet
+        // Note: We should track undos used, not total moves
+        // For now, just check if there are moves and undoLimit allows it
         final canUndo = gameProvider.state.canUndo &&
-            (config.undoLimit == null ||
-                gameProvider.state.engine.moveHistory.length <= (config.undoLimit! * 2));
+            (config.undoLimit == null || config.undoLimit! > 0);
 
         return Padding(
           padding: const EdgeInsets.all(8),

@@ -120,9 +120,7 @@ class GameProvider extends ChangeNotifier {
     _state = _state.copyWith(isAIThinking: true);
     notifyListeners();
 
-    // Small delay for better UX
-    await Future.delayed(const Duration(milliseconds: 300));
-
+    // Get AI move immediately (no delay)
     final aiMove = await _ai?.getBestMove(_state.engine);
 
     if (aiMove != null) {

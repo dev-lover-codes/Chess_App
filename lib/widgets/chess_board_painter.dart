@@ -162,28 +162,42 @@ class ChessBoardPainter extends CustomPainter {
           squareColor = isLight ? AppTheme.lightSquare : AppTheme.darkSquare;
         }
 
-        // Highlight last move with glow effect
+        // Draw base square with wood grain effect
+        final woodGrainPaint = Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              squareColor,
+              squareColor.withOpacity(0.95),
+              squareColor.withOpacity(0.98),
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ).createShader(rect);
+        canvas.drawRect(rect, woodGrainPaint);
+
+        // Add 3D bevel effect on edges
+        _draw3DBevel(canvas, rect, isLight);
+
+        // Highlight last move with subtle glow
         if (lastMove != null &&
             ((lastMove!.fromRow == row && lastMove!.fromCol == col) ||
                 (lastMove!.toRow == row && lastMove!.toCol == col))) {
-          squareColor = isDarkMode
+          final highlightColor = isDarkMode
               ? AppTheme.lastMoveHighlightDark
               : AppTheme.lastMoveHighlight;
           
-          // Add glow effect
           final glowPaint = Paint()
             ..shader = RadialGradient(
               colors: [
-                squareColor,
-                squareColor.withOpacity(0.5),
+                highlightColor,
+                highlightColor.withOpacity(0.3),
               ],
             ).createShader(rect);
           canvas.drawRect(rect, glowPaint);
-        } else {
-          canvas.drawRect(rect, Paint()..color = squareColor);
         }
 
-        // Highlight selected square with pulsing effect
+        // Highlight selected square
         if (selectedRow == row && selectedCol == col) {
           final selectedColor = isDarkMode
               ? AppTheme.selectedSquareDark
@@ -198,8 +212,8 @@ class ChessBoardPainter extends CustomPainter {
           final borderPaint = Paint()
             ..color = selectedColor.withOpacity(0.8)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 4;
-          canvas.drawRect(rect.deflate(2), borderPaint);
+            ..strokeWidth = 3;
+          canvas.drawRect(rect.deflate(1.5), borderPaint);
         }
 
         // Check if king is in check - add red glow
@@ -211,7 +225,6 @@ class ChessBoardPainter extends CustomPainter {
                 ? AppTheme.checkHighlightDark
                 : AppTheme.checkHighlight;
             
-            // Pulsing red glow
             final glowPaint = Paint()
               ..shader = RadialGradient(
                 center: Alignment.center,
@@ -224,25 +237,35 @@ class ChessBoardPainter extends CustomPainter {
             canvas.drawRect(rect, glowPaint);
           }
         }
-
-        // Add subtle inner shadow for depth
-        _drawInnerShadow(canvas, rect, isLight);
       }
     }
   }
 
-  void _drawInnerShadow(Canvas canvas, Rect rect, bool isLight) {
+  // Draw 3D bevel effect for wooden board
+  void _draw3DBevel(Canvas canvas, Rect rect, bool isLight) {
+    // Top-left highlight (light edge)
+    final highlightPaint = Paint()
+      ..color = Colors.white.withOpacity(isLight ? 0.15 : 0.08)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    
+    final highlightPath = Path()
+      ..moveTo(rect.left, rect.bottom)
+      ..lineTo(rect.left, rect.top)
+      ..lineTo(rect.right, rect.top);
+    canvas.drawPath(highlightPath, highlightPaint);
+
+    // Bottom-right shadow (dark edge)
     final shadowPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.black.withOpacity(isLight ? 0.03 : 0.08),
-          Colors.transparent,
-          Colors.white.withOpacity(isLight ? 0.05 : 0.02),
-        ],
-      ).createShader(rect);
-    canvas.drawRect(rect, shadowPaint);
+      ..color = Colors.black.withOpacity(isLight ? 0.12 : 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    
+    final shadowPath = Path()
+      ..moveTo(rect.right, rect.top)
+      ..lineTo(rect.right, rect.bottom)
+      ..lineTo(rect.left, rect.bottom);
+    canvas.drawPath(shadowPath, shadowPaint);
   }
 
   void _drawLegalMoveIndicators(Canvas canvas, double squareSize) {
