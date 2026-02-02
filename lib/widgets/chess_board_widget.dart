@@ -105,6 +105,8 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
                                   selectedCol: state.selectedCol,
                                   legalMoves: state.legalMovesForSelected,
                                   lastMove: state.lastMove,
+                                  hintMove: state.hintMove,
+                                  highlightedMove: state.highlightedMove,
                                   isDarkMode: stageProvider.darkMode,
                                 ),
                               ),

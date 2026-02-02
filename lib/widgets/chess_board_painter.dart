@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../engine/chess_engine.dart';
 import '../engine/piece.dart';
@@ -10,6 +11,8 @@ class ChessBoardPainter extends CustomPainter {
   final int? selectedCol;
   final List<Move> legalMoves;
   final Move? lastMove;
+  final Move? hintMove; // Show hint visually
+  final Move? highlightedMove; // Show clicked history move
   final bool isDarkMode;
   final bool showCoordinates;
 
@@ -19,6 +22,8 @@ class ChessBoardPainter extends CustomPainter {
     this.selectedCol,
     this.legalMoves = const [],
     this.lastMove,
+    this.hintMove,
+    this.highlightedMove,
     this.isDarkMode = false,
     this.showCoordinates = true,
   });
@@ -30,6 +35,9 @@ class ChessBoardPainter extends CustomPainter {
     // Draw board with gradient effect
     _drawBoardWithGradient(canvas, size, squareSize);
 
+    // Draw hint or highlighted move with GREEN dots
+    _drawHintOrHighlightedMove(canvas, squareSize);
+
     // Draw legal move indicators
     _drawLegalMoveIndicators(canvas, squareSize);
 
@@ -40,6 +48,98 @@ class ChessBoardPainter extends CustomPainter {
     if (showCoordinates) {
       _drawCoordinates(canvas, size, squareSize);
     }
+  }
+
+  void _drawHintOrHighlightedMove(Canvas canvas, double squareSize) {
+    final moveToShow = hintMove ?? highlightedMove;
+    if (moveToShow == null) return;
+
+    // Draw GREEN path from source to destination
+    final fromX = (moveToShow.fromCol + 0.5) * squareSize;
+    final fromY = (moveToShow.fromRow + 0.5) * squareSize;
+    final toX = (moveToShow.toCol + 0.5) * squareSize;
+    final toY = (moveToShow.toRow + 0.5) * squareSize;
+
+    // Draw green glow on source square
+    final fromRect = Rect.fromLTWH(
+      moveToShow.fromCol * squareSize,
+      moveToShow.fromRow * squareSize,
+      squareSize,
+      squareSize,
+    );
+    final fromGlowPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          Colors.green.withOpacity(0.4),
+          Colors.green.withOpacity(0.1),
+          Colors.transparent,
+        ],
+      ).createShader(fromRect);
+    canvas.drawRect(fromRect, fromGlowPaint);
+
+    // Draw green glow on destination square
+    final toRect = Rect.fromLTWH(
+      moveToShow.toCol * squareSize,
+      moveToShow.toRow * squareSize,
+      squareSize,
+      squareSize,
+    );
+    final toGlowPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          Colors.green.withOpacity(0.5),
+          Colors.green.withOpacity(0.2),
+          Colors.transparent,
+        ],
+      ).createShader(toRect);
+    canvas.drawRect(toRect, toGlowPaint);
+
+    // Draw GREEN dots on source and destination
+    final greenPaint = Paint()
+      ..color = Colors.green
+      ..style = PaintingStyle.fill;
+
+    // Source dot with glow
+    final sourceGlowPaint = Paint()
+      ..color = Colors.green.withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawCircle(Offset(fromX, fromY), squareSize * 0.25, sourceGlowPaint);
+    canvas.drawCircle(Offset(fromX, fromY), squareSize * 0.2, greenPaint);
+
+    // Destination dot with glow (larger)
+    final destGlowPaint = Paint()
+      ..color = Colors.green.withOpacity(0.4)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawCircle(Offset(toX, toY), squareSize * 0.35, destGlowPaint);
+    canvas.drawCircle(Offset(toX, toY), squareSize * 0.28, greenPaint);
+
+    // Draw arrow from source to destination
+    final arrowPaint = Paint()
+      ..color = Colors.green.withOpacity(0.7)
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke;
+    
+    canvas.drawLine(Offset(fromX, fromY), Offset(toX, toY), arrowPaint);
+
+    // Draw arrowhead
+    final angle = atan2(toY - fromY, toX - fromX);
+    final arrowSize = squareSize * 0.2;
+    final arrowPath = Path();
+    arrowPath.moveTo(toX, toY);
+    arrowPath.lineTo(
+      toX - arrowSize * cos(angle - 0.5),
+      toY - arrowSize * sin(angle - 0.5),
+    );
+    arrowPath.lineTo(
+      toX - arrowSize * cos(angle + 0.5),
+      toY - arrowSize * sin(angle + 0.5),
+    );
+    arrowPath.close();
+    
+    final arrowFillPaint = Paint()
+      ..color = Colors.green.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(arrowPath, arrowFillPaint);
   }
 
   void _drawBoardWithGradient(Canvas canvas, Size size, double squareSize) {
@@ -304,6 +404,8 @@ class ChessBoardPainter extends CustomPainter {
         oldDelegate.selectedCol != selectedCol ||
         oldDelegate.legalMoves != legalMoves ||
         oldDelegate.lastMove != lastMove ||
+        oldDelegate.hintMove != hintMove ||
+        oldDelegate.highlightedMove != highlightedMove ||
         oldDelegate.isDarkMode != isDarkMode;
   }
 }

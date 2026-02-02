@@ -161,14 +161,20 @@ class GameProvider extends ChangeNotifier {
   void undoMove() {
     if (!_state.canUndo) return;
 
-    // Undo AI move first (if it's AI's turn)
-    if (!_state.isPlayerTurn && _state.engine.moveHistory.isNotEmpty) {
+    final moveCount = _state.engine.moveHistory.length;
+    
+    // Try to undo 2 moves (your move + AI's move) for best UX
+    if (moveCount >= 2) {
+      // Undo AI's last move
       _state.engine.undoMove();
-    }
-
-    // Undo player move
-    if (_state.engine.moveHistory.isNotEmpty) {
+      // Undo your last move
       _state.engine.undoMove();
+    } else if (moveCount == 1) {
+      // Only one move exists, just undo it
+      _state.engine.undoMove();
+    } else {
+      // No moves to undo
+      return;
     }
 
     _state = _state.copyWith(
@@ -176,19 +182,10 @@ class GameProvider extends ChangeNotifier {
       clearLastMove: true,
       legalMovesForSelected: [],
       status: _state.engine.getGameStatus(),
-      isAIThinking: false, // Clear AI thinking state
+      isAIThinking: false,
     );
 
     notifyListeners();
-    
-    // If after undo it's AI's turn and game is not over, trigger AI move
-    if (!_state.isPlayerTurn && !_state.isGameOver) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (!_state.isPlayerTurn && !_state.isGameOver) {
-          _makeAIMove();
-        }
-      });
-    }
   }
 
   void resetGame() {
@@ -203,6 +200,30 @@ class GameProvider extends ChangeNotifier {
   Future<Move?> getHint() async {
     if (_state.isAIThinking || _state.isGameOver) return null;
     return await _ai?.getBestMove(_state.engine);
+  }
+
+  // Show hint visually on the board
+  void showHintOnBoard(Move hint) {
+    _state = _state.copyWith(hintMove: hint, clearHighlight: true);
+    notifyListeners();
+  }
+
+  // Clear hint from board
+  void clearHint() {
+    _state = _state.copyWith(clearHint: true);
+    notifyListeners();
+  }
+
+  // Show a history move on the board (when user clicks it)
+  void showHistoryMoveOnBoard(Move move) {
+    _state = _state.copyWith(highlightedMove: move, clearHint: true);
+    notifyListeners();
+  }
+
+  // Clear highlighted history move
+  void clearHighlightedMove() {
+    _state = _state.copyWith(clearHighlight: true);
+    notifyListeners();
   }
 
   void startAIMove() {

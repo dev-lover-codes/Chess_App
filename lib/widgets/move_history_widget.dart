@@ -32,7 +32,6 @@ class MoveHistoryWidget extends StatelessWidget {
 
             return Container(
               margin: const EdgeInsets.symmetric(vertical: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
@@ -41,29 +40,58 @@ class MoveHistoryWidget extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 35,
-                    child: Text(
-                      '$moveNumber.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        '$moveNumber.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      whiteMove.toAlgebraic(),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
+                    child: InkWell(
+                      onTap: () {
+                        // Show white's move on board with green arrow
+                        gameProvider.showHistoryMoveOnBoard(whiteMove);
+                        // Auto-clear after 3 seconds
+                        Future.delayed(const Duration(seconds: 3), () {
+                          gameProvider.clearHighlightedMove();
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        child: Text(
+                          whiteMove.toAlgebraic(),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontFamily: 'monospace',
+                              ),
+                        ),
+                      ),
                     ),
                   ),
                   if (blackMove != null)
                     Expanded(
-                      child: Text(
-                        blackMove.toAlgebraic(),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontFamily: 'monospace',
-                            ),
+                      child: InkWell(
+                        onTap: () {
+                          // Show black's move on board with green arrow
+                          gameProvider.showHistoryMoveOnBoard(blackMove);
+                          // Auto-clear after 3 seconds
+                          Future.delayed(const Duration(seconds: 3), () {
+                            gameProvider.clearHighlightedMove();
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          child: Text(
+                            blackMove.toAlgebraic(),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontFamily: 'monospace',
+                                ),
+                          ),
+                        ),
                       ),
                     )
                   else

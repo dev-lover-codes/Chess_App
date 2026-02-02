@@ -375,6 +375,9 @@ class _GameScreenState extends State<GameScreen> {
     ScaffoldMessenger.of(context).clearSnackBars();
     
     if (hint != null && mounted) {
+      // Show hint VISUALLY on the board with green arrow
+      _gameProvider.showHintOnBoard(hint);
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -387,14 +390,14 @@ class _GameScreenState extends State<GameScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Suggested Move:',
+                      'Hint shown on board!',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      hint.toAlgebraic(),
+                      'Move: ${hint.toAlgebraic()}',
                       style: const TextStyle(
                         fontFamily: 'monospace',
-                        fontSize: 16,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -407,12 +410,21 @@ class _GameScreenState extends State<GameScreen> {
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           action: SnackBarAction(
-            label: 'OK',
+            label: 'Clear',
             textColor: Colors.white,
-            onPressed: () {},
+            onPressed: () {
+              _gameProvider.clearHint();
+            },
           ),
         ),
       );
+      
+      // Auto-clear hint after 5 seconds
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) {
+          _gameProvider.clearHint();
+        }
+      });
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
