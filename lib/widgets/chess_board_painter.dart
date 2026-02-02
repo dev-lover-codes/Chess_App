@@ -27,7 +27,22 @@ class ChessBoardPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final squareSize = size.width / 8;
 
-    // Draw board squares
+    // Draw board with gradient effect
+    _drawBoardWithGradient(canvas, size, squareSize);
+
+    // Draw legal move indicators
+    _drawLegalMoveIndicators(canvas, squareSize);
+
+    // Draw pieces with shadows
+    _drawPiecesWithShadows(canvas, squareSize);
+
+    // Draw coordinates
+    if (showCoordinates) {
+      _drawCoordinates(canvas, size, squareSize);
+    }
+  }
+
+  void _drawBoardWithGradient(Canvas canvas, Size size, double squareSize) {
     for (int row = 0; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
         final rect = Rect.fromLTWH(
@@ -37,7 +52,7 @@ class ChessBoardPainter extends CustomPainter {
           squareSize,
         );
 
-        // Determine square color
+        // Determine base square color
         Color squareColor;
         final isLight = (row + col) % 2 == 0;
         
@@ -47,42 +62,93 @@ class ChessBoardPainter extends CustomPainter {
           squareColor = isLight ? AppTheme.lightSquare : AppTheme.darkSquare;
         }
 
-        // Highlight last move
+        // Highlight last move with glow effect
         if (lastMove != null &&
             ((lastMove!.fromRow == row && lastMove!.fromCol == col) ||
                 (lastMove!.toRow == row && lastMove!.toCol == col))) {
           squareColor = isDarkMode
               ? AppTheme.lastMoveHighlightDark
               : AppTheme.lastMoveHighlight;
+          
+          // Add glow effect
+          final glowPaint = Paint()
+            ..shader = RadialGradient(
+              colors: [
+                squareColor,
+                squareColor.withOpacity(0.5),
+              ],
+            ).createShader(rect);
+          canvas.drawRect(rect, glowPaint);
+        } else {
+          canvas.drawRect(rect, Paint()..color = squareColor);
         }
 
-        // Highlight selected square
+        // Highlight selected square with pulsing effect
         if (selectedRow == row && selectedCol == col) {
-          squareColor = isDarkMode
+          final selectedColor = isDarkMode
               ? AppTheme.selectedSquareDark
               : AppTheme.selectedSquare;
+          
+          final paint = Paint()
+            ..color = selectedColor
+            ..style = PaintingStyle.fill;
+          canvas.drawRect(rect, paint);
+          
+          // Add border glow
+          final borderPaint = Paint()
+            ..color = selectedColor.withOpacity(0.8)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4;
+          canvas.drawRect(rect.deflate(2), borderPaint);
         }
 
-        // Check if king is in check
+        // Check if king is in check - add red glow
         final piece = engine.board[row][col];
         if (piece != null && piece.type == PieceType.king) {
           final status = engine.getGameStatus();
           if (status == GameStatus.check && piece.color == engine.currentTurn) {
-            squareColor = isDarkMode
+            final checkColor = isDarkMode
                 ? AppTheme.checkHighlightDark
                 : AppTheme.checkHighlight;
+            
+            // Pulsing red glow
+            final glowPaint = Paint()
+              ..shader = RadialGradient(
+                center: Alignment.center,
+                colors: [
+                  checkColor,
+                  checkColor.withOpacity(0.3),
+                  Colors.transparent,
+                ],
+              ).createShader(rect);
+            canvas.drawRect(rect, glowPaint);
           }
         }
 
-        canvas.drawRect(rect, Paint()..color = squareColor);
+        // Add subtle inner shadow for depth
+        _drawInnerShadow(canvas, rect, isLight);
       }
     }
+  }
 
-    // Draw legal move indicators
+  void _drawInnerShadow(Canvas canvas, Rect rect, bool isLight) {
+    final shadowPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.black.withOpacity(isLight ? 0.03 : 0.08),
+          Colors.transparent,
+          Colors.white.withOpacity(isLight ? 0.05 : 0.02),
+        ],
+      ).createShader(rect);
+    canvas.drawRect(rect, shadowPaint);
+  }
+
+  void _drawLegalMoveIndicators(Canvas canvas, double squareSize) {
     for (final move in legalMoves) {
       final centerX = (move.toCol + 0.5) * squareSize;
       final centerY = (move.toRow + 0.5) * squareSize;
-      final radius = squareSize * 0.15;
 
       final paint = Paint()
         ..color = isDarkMode
@@ -92,20 +158,42 @@ class ChessBoardPainter extends CustomPainter {
 
       // Draw circle for empty squares, ring for captures
       if (move.capturedPiece != null) {
+        // Capture indicator - ring with glow
         paint.style = PaintingStyle.stroke;
-        paint.strokeWidth = squareSize * 0.1;
-        canvas.drawCircle(Offset(centerX, centerY), squareSize * 0.4, paint);
+        paint.strokeWidth = squareSize * 0.12;
+        
+        // Outer glow
+        final glowPaint = Paint()
+          ..color = paint.color.withOpacity(0.3)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = squareSize * 0.18
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        canvas.drawCircle(Offset(centerX, centerY), squareSize * 0.38, glowPaint);
+        
+        // Main ring
+        canvas.drawCircle(Offset(centerX, centerY), squareSize * 0.38, paint);
       } else {
-        canvas.drawCircle(Offset(centerX, centerY), radius, paint);
+        // Normal move indicator - dot with shadow
+        final shadowPaint = Paint()
+          ..color = Colors.black.withOpacity(0.2)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        canvas.drawCircle(
+          Offset(centerX + 1, centerY + 1),
+          squareSize * 0.15,
+          shadowPaint,
+        );
+        
+        canvas.drawCircle(Offset(centerX, centerY), squareSize * 0.15, paint);
       }
     }
+  }
 
-    // Draw pieces
+  void _drawPiecesWithShadows(Canvas canvas, double squareSize) {
     for (int row = 0; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
         final piece = engine.board[row][col];
         if (piece != null) {
-          _drawPiece(
+          _drawPieceWithShadow(
             canvas,
             piece,
             col * squareSize,
@@ -115,23 +203,33 @@ class ChessBoardPainter extends CustomPainter {
         }
       }
     }
-
-    // Draw coordinates
-    if (showCoordinates) {
-      _drawCoordinates(canvas, size, squareSize);
-    }
   }
 
-  void _drawPiece(Canvas canvas, Piece piece, double x, double y, double size) {
+  void _drawPieceWithShadow(
+    Canvas canvas,
+    Piece piece,
+    double x,
+    double y,
+    double size,
+  ) {
     final textStyle = TextStyle(
-      fontSize: size * 0.7,
+      fontSize: size * 0.75,
       fontFamily: 'Arial',
       color: piece.color == PieceColor.white ? Colors.white : Colors.black,
       shadows: [
         Shadow(
-          offset: const Offset(1, 1),
+          offset: const Offset(2, 2),
+          blurRadius: 4,
+          color: piece.color == PieceColor.white
+              ? Colors.black.withOpacity(0.7)
+              : Colors.white.withOpacity(0.7),
+        ),
+        Shadow(
+          offset: const Offset(-1, -1),
           blurRadius: 2,
-          color: piece.color == PieceColor.white ? Colors.black54 : Colors.white54,
+          color: piece.color == PieceColor.white
+              ? Colors.white.withOpacity(0.3)
+              : Colors.black.withOpacity(0.3),
         ),
       ],
     );
@@ -156,9 +254,16 @@ class ChessBoardPainter extends CustomPainter {
 
   void _drawCoordinates(Canvas canvas, Size size, double squareSize) {
     final textStyle = TextStyle(
-      fontSize: squareSize * 0.2,
+      fontSize: squareSize * 0.22,
       fontWeight: FontWeight.bold,
-      color: isDarkMode ? Colors.white70 : Colors.black54,
+      color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6),
+      shadows: [
+        Shadow(
+          offset: const Offset(0.5, 0.5),
+          blurRadius: 1,
+          color: isDarkMode ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.5),
+        ),
+      ],
     );
 
     // Draw file letters (a-h)
@@ -171,8 +276,8 @@ class ChessBoardPainter extends CustomPainter {
       );
       textPainter.layout();
 
-      final x = col * squareSize + squareSize - textPainter.width - 2;
-      final y = size.height - textPainter.height - 2;
+      final x = col * squareSize + squareSize - textPainter.width - 4;
+      final y = size.height - textPainter.height - 4;
       textPainter.paint(canvas, Offset(x, y));
     }
 
@@ -186,8 +291,8 @@ class ChessBoardPainter extends CustomPainter {
       );
       textPainter.layout();
 
-      final x = 2.0;
-      final y = row * squareSize + 2;
+      final x = 4.0;
+      final y = row * squareSize + 4;
       textPainter.paint(canvas, Offset(x, y));
     }
   }

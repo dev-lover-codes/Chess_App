@@ -4,7 +4,6 @@ import '../engine/move.dart';
 import '../engine/piece.dart';
 import '../models/game_state.dart';
 import '../ai/chess_ai.dart';
-import '../config/game_config.dart';
 
 class GameProvider extends ChangeNotifier {
   GameState _state;
@@ -162,7 +161,7 @@ class GameProvider extends ChangeNotifier {
   void undoMove() {
     if (!_state.canUndo) return;
 
-    // Undo AI move
+    // Undo AI move first (if it's AI's turn)
     if (!_state.isPlayerTurn && _state.engine.moveHistory.isNotEmpty) {
       _state.engine.undoMove();
     }
@@ -177,9 +176,19 @@ class GameProvider extends ChangeNotifier {
       clearLastMove: true,
       legalMovesForSelected: [],
       status: _state.engine.getGameStatus(),
+      isAIThinking: false, // Clear AI thinking state
     );
 
     notifyListeners();
+    
+    // If after undo it's AI's turn and game is not over, trigger AI move
+    if (!_state.isPlayerTurn && !_state.isGameOver) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!_state.isPlayerTurn && !_state.isGameOver) {
+          _makeAIMove();
+        }
+      });
+    }
   }
 
   void resetGame() {

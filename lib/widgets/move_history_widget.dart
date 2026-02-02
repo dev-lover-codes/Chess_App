@@ -23,38 +23,51 @@ class MoveHistoryWidget extends StatelessWidget {
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(8),
           itemCount: (moves.length / 2).ceil(),
           itemBuilder: (context, index) {
             final moveNumber = index + 1;
             final whiteMove = moves[index * 2];
             final blackMove = index * 2 + 1 < moves.length ? moves[index * 2 + 1] : null;
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
                 children: [
                   SizedBox(
-                    width: 40,
+                    width: 35,
                     child: Text(
                       '$moveNumber.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      whiteMove.toStandardNotation(gameProvider.state.engine.board),
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      whiteMove.toAlgebraic(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontFamily: 'monospace',
+                          ),
                     ),
                   ),
                   if (blackMove != null)
                     Expanded(
                       child: Text(
-                        blackMove.toStandardNotation(gameProvider.state.engine.board),
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        blackMove.toAlgebraic(),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontFamily: 'monospace',
+                            ),
                       ),
-                    ),
+                    )
+                  else
+                    const Expanded(child: SizedBox()),
                 ],
               ),
             );

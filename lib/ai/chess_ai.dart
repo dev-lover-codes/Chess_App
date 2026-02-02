@@ -1,7 +1,6 @@
 import 'dart:math';
 import '../engine/chess_engine.dart';
 import '../engine/move.dart';
-import '../engine/piece.dart';
 import 'evaluator.dart';
 
 // Abstract AI interface

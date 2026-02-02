@@ -329,17 +329,103 @@ class _GameScreenState extends State<GameScreen> {
     final config = GameConfig.getStage(widget.stage);
     if (!config.hintsAllowed) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hints are not allowed in this stage')),
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.lock, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Hints are not allowed in this stage')),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       return;
     }
 
+    // Show loading indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            SizedBox(width: 12),
+            Text('Calculating best move...'),
+          ],
+        ),
+        duration: const Duration(seconds: 10),
+        backgroundColor: Colors.blue.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+
     final hint = await _gameProvider.getHint();
+    
+    // Clear loading snackbar
+    ScaffoldMessenger.of(context).clearSnackBars();
+    
     if (hint != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Hint: ${hint.toAlgebraic()}'),
-          duration: const Duration(seconds: 3),
+          content: Row(
+            children: [
+              const Icon(Icons.lightbulb, color: Colors.amber),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Suggested Move:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      hint.toAlgebraic(),
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 5),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('No hint available')),
+            ],
+          ),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
