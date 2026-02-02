@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/game_config.dart';
+import '../services/supabase_service.dart';
 
 class StageProvider extends ChangeNotifier {
   Set<int> _completedStages = {};
@@ -53,6 +54,40 @@ class StageProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final completedList = _completedStages.map((s) => s.toString()).toList();
     await prefs.setStringList(GameConfig.storageKeyProgress, completedList);
+
+    // Sync to Cloud
+    final highestStage = _completedStages.isEmpty 
+        ? 0 
+        : _completedStages.reduce((a, b) => a > b ? a : b);
+    
+    try {
+      final supabase = SupabaseService();
+      if (supabase.isAuthenticated) {
+        await supabase.syncProgress(highestStage, _soundEnabled, _darkMode);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Cloud sync failed: $e');
+      }
+    }
+  }
+  
+  // Call this from AuthScreen after successful login
+  Future<void> syncFromCloud(int highestCompletedStage) async {
+    // If cloud has higher progress, update local
+    // Assuming linear progression: if stage 5 is done, 1-4 are done.
+    bool changed = false;
+    for (int i = 1; i <= highestCompletedStage; i++) {
+        if (!_completedStages.contains(i)) {
+            _completedStages.add(i);
+            changed = true;
+        }
+    }
+    
+    if (changed) {
+        await _saveProgress();
+        notifyListeners();
+    }
   }
 
   Future<void> toggleSound() async {

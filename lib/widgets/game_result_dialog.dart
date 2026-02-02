@@ -6,6 +6,7 @@ class GameResultDialog extends StatelessWidget {
   final bool isVictory;
   final VoidCallback onPlayAgain;
   final VoidCallback onBackToMenu;
+  final VoidCallback? onNextStage;
 
   const GameResultDialog({
     super.key,
@@ -14,6 +15,7 @@ class GameResultDialog extends StatelessWidget {
     required this.isVictory,
     required this.onPlayAgain,
     required this.onBackToMenu,
+    this.onNextStage,
   });
 
   @override
@@ -49,6 +51,45 @@ class GameResultDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
+            
+            // Next Stage Button (if available) - Full Width
+            if (onNextStage != null) ...[
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF42A5F5), Color(0xFF7E57C2)], // Blue to Purple
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF42A5F5).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: onNextStage,
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text(
+                    'Next Stage',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                       borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -67,7 +108,7 @@ class GameResultDialog extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: onPlayAgain,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Play Again'),
+                    label: const Text('Retry'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),

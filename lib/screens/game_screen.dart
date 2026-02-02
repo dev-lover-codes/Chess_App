@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
@@ -90,6 +91,8 @@ class _GameScreenState extends State<GameScreen> {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       
+      final hasNextStage = widget.stage < GameConfig.stages.length;
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -113,6 +116,17 @@ class _GameScreenState extends State<GameScreen> {
             Navigator.pop(context);
             Navigator.pop(context);
           },
+          onNextStage: (isVictory && hasNextStage) 
+              ? () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GameScreen(stage: widget.stage + 1),
+                    ),
+                  );
+                }
+              : null,
         ),
       );
     });
@@ -123,210 +137,248 @@ class _GameScreenState extends State<GameScreen> {
     return ChangeNotifierProvider.value(
       value: _gameProvider,
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: Text('Stage ${widget.stage} - ${GameConfig.getStage(widget.stage).name}'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: _buildGlassIconBtn(
+              icon: Icons.arrow_back_ios_new,
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          centerTitle: true,
+          title: _buildGlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Text(
+              'Stage ${widget.stage}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
           actions: [
-            IconButton(
-              onPressed: () => _showHint(),
-              icon: const Icon(Icons.lightbulb_outline),
-              tooltip: 'Hint',
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: _buildGlassIconBtn(
+                icon: Icons.history,
+                onPressed: _showHistorySheet,
+              ),
             ),
           ],
         ),
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isPortrait = constraints.maxHeight > constraints.maxWidth;
-              
-              return isPortrait
-                  ? _buildPortraitLayout()
-                  : _buildLandscapeLayout();
-            },
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Theme.of(context).colorScheme.surface,
+                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Stack(
+              children: [
+                // 1. Board Centered
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: const ChessBoardWidget(),
+                  ),
+                ),
+
+                // 2. Info Panel (Floating Top)
+                Positioned(
+                  top: 10,
+                  left: 20,
+                  right: 20,
+                  child: _buildInfoPanel(),
+                ),
+
+                // 3. Controls (Floating Bottom)
+                Positioned(
+                  bottom: 30,
+                  left: 20,
+                  right: 20,
+                  child: _buildFloatingControls(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPortraitLayout() {
-    return Column(
-      children: [
-        _buildStatusBar(),
-        Expanded(
-          flex: 3,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: const ChessBoardWidget(),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              _buildControls(),
-              Expanded(
-                child: Card(
-                  margin: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          'Move History',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      const Expanded(child: MoveHistoryWidget()),
-                    ],
-                  ),
-                ),
+  Widget _buildGlassContainer({required Widget child, EdgeInsets? padding}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 2,
               ),
             ],
           ),
+          child: child,
         ),
-      ],
+      ),
+    );
+  }
+  
+  Widget _buildGlassIconBtn({required IconData icon, required VoidCallback onPressed}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+          child: IconButton(
+            icon: Icon(icon, size: 20),
+            onPressed: onPressed,
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildLandscapeLayout() {
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Column(
-            children: [
-              _buildStatusBar(),
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: const ChessBoardWidget(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              _buildControls(),
-              Expanded(
-                child: Card(
-                  margin: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          'Move History',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      const Expanded(child: MoveHistoryWidget()),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusBar() {
+  Widget _buildInfoPanel() {
     return Consumer<GameProvider>(
       builder: (context, gameProvider, child) {
         final state = gameProvider.state;
-        String statusText = '';
-        Color? statusColor;
+        String statusText;
+        Color statusColor = Theme.of(context).colorScheme.onSurface;
+        IconData statusIcon = Icons.info_outline;
 
         if (state.isAIThinking) {
-          statusText = 'AI is thinking...';
-          statusColor = Colors.orange;
+          statusText = 'AI Thinking...';
+          statusIcon = Icons.psychology;
         } else if (state.status == GameStatus.check) {
           statusText = 'Check!';
           statusColor = Colors.red;
+          statusIcon = Icons.warning_amber_rounded;
         } else if (state.status == GameStatus.checkmate) {
-          statusText = state.isPlayerTurn ? 'Checkmate - You Lost' : 'Checkmate - You Won!';
+          statusText = state.isPlayerTurn ? 'Defeat' : 'Victory!';
           statusColor = state.isPlayerTurn ? Colors.red : Colors.green;
-        } else if (state.status == GameStatus.stalemate) {
-          statusText = 'Stalemate - Draw';
-          statusColor = Colors.grey;
-        } else if (state.status == GameStatus.draw) {
-          statusText = 'Draw';
-          statusColor = Colors.grey;
+          statusIcon = Icons.emoji_events;
         } else {
-          statusText = state.isPlayerTurn ? 'Your Turn (White)' : 'AI Turn (Black)';
+          statusText = state.isPlayerTurn ? 'Your Turn' : 'Opponent\'s Turn';
+          statusIcon = state.isPlayerTurn ? Icons.person : Icons.computer;
         }
 
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          color: statusColor?.withOpacity(0.2),
-          child: Text(
-            statusText,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        return _buildGlassContainer(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(statusIcon, color: statusColor),
+              const SizedBox(width: 10),
+              Text(
+                statusText,
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 18,
                   color: statusColor,
                 ),
-            textAlign: TextAlign.center,
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildControls() {
-    return Consumer<GameProvider>(
-      builder: (context, gameProvider, child) {
-        final config = GameConfig.getStage(widget.stage);
-        
-        // Undo is allowed if:
-        // 1. There are moves to undo (canUndo)
-        // 2. Either no undo limit OR we haven't used all our undos yet
-        // Note: We should track undos used, not total moves
-        // For now, just check if there are moves and undoLimit allows it
-        final canUndo = gameProvider.state.canUndo &&
-            (config.undoLimit == null || config.undoLimit! > 0);
+  Widget _buildFloatingControls() {
+    return _buildGlassContainer(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildControlButton(
+            icon: Icons.undo,
+            label: 'Undo',
+            onPressed: _gameProvider.state.canUndo ? _gameProvider.undoMove : null,
+          ),
+           _buildControlButton(
+             icon: Icons.lightbulb_outline,
+            label: 'Hint',
+            onPressed: () => _showHint(),
+           ),
+          _buildControlButton(
+            icon: Icons.refresh,
+            label: 'Restart',
+            onPressed: _gameProvider.resetGame,
+          ),
+        ],
+      ),
+    );
+  }
 
-        return Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  Widget _buildControlButton({required IconData icon, required String label, VoidCallback? onPressed}) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.5,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  gameProvider.resetGame();
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Restart'),
-              ),
-              ElevatedButton.icon(
-                onPressed: canUndo
-                    ? () {
-                        gameProvider.undoMove();
-                      }
-                    : null,
-                icon: const Icon(Icons.undo),
-                label: const Text('Undo'),
+              Icon(icon, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  void _showHistorySheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Text(
+              'Move History',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const Divider(),
+            const Expanded(child: MoveHistoryWidget()),
+          ],
+        ),
+      ),
     );
   }
 

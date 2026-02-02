@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/stage_provider.dart';
-import 'screens/stage_selection_screen.dart';
+import 'screens/landing_screen.dart';
+import 'services/supabase_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize Supabase
+  await SupabaseService().initialize();
+
+  // Load local progress
   final stageProvider = StageProvider();
   await stageProvider.loadProgress();
   
@@ -30,19 +35,10 @@ class ChessMasterApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: provider.darkMode ? ThemeMode.dark : ThemeMode.light,
-            home: const ChessMasterHome(),
+            home: const LandingScreen(),
           );
         },
       ),
     );
-  }
-}
-
-class ChessMasterHome extends StatelessWidget {
-  const ChessMasterHome({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const StageSelectionScreen();
   }
 }
