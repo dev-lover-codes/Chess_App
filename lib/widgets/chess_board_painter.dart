@@ -241,13 +241,32 @@ class ChessBoardPainter extends CustomPainter {
     }
   }
 
-  // Draw 3D bevel effect for wooden board
+  // Draw enhanced 3D bevel effect for professional wooden board look
   void _draw3DBevel(Canvas canvas, Rect rect, bool isLight) {
-    // Top-left highlight (light edge)
+    // Add inner shadow for depth
+    final innerShadowPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.black.withOpacity(0.15),
+          Colors.transparent,
+        ],
+      ).createShader(rect);
+    
+    final innerShadowRect = Rect.fromLTWH(
+      rect.left + 1,
+      rect.top + 1,
+      rect.width - 2,
+      rect.height - 2,
+    );
+    canvas.drawRect(innerShadowRect, innerShadowPaint);
+    
+    // Top-left highlight (light edge) - more pronounced
     final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(isLight ? 0.15 : 0.08)
+      ..color = Colors.white.withOpacity(isLight ? 0.25 : 0.15)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 2.0;
     
     final highlightPath = Path()
       ..moveTo(rect.left, rect.bottom)
@@ -255,17 +274,33 @@ class ChessBoardPainter extends CustomPainter {
       ..lineTo(rect.right, rect.top);
     canvas.drawPath(highlightPath, highlightPaint);
 
-    // Bottom-right shadow (dark edge)
+    // Bottom-right shadow (dark edge) - deeper shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(isLight ? 0.12 : 0.18)
+      ..color = Colors.black.withOpacity(isLight ? 0.20 : 0.30)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 2.0;
     
     final shadowPath = Path()
       ..moveTo(rect.right, rect.top)
       ..lineTo(rect.right, rect.bottom)
       ..lineTo(rect.left, rect.bottom);
     canvas.drawPath(shadowPath, shadowPaint);
+    
+    // Add subtle inner highlight on top-left corner
+    final cornerHighlightPaint = Paint()
+      ..color = Colors.white.withOpacity(isLight ? 0.15 : 0.08)
+      ..strokeWidth = 1.0;
+    
+    canvas.drawLine(
+      Offset(rect.left + 2, rect.top + 2),
+      Offset(rect.left + rect.width * 0.3, rect.top + 2),
+      cornerHighlightPaint,
+    );
+    canvas.drawLine(
+      Offset(rect.left + 2, rect.top + 2),
+      Offset(rect.left + 2, rect.top + rect.height * 0.3),
+      cornerHighlightPaint,
+    );
   }
 
   void _drawLegalMoveIndicators(Canvas canvas, double squareSize) {

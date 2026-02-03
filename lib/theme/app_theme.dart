@@ -64,13 +64,13 @@ class AppTheme {
     ),
   );
 
-  // Chess board colors - Wooden board style
-  static const Color lightSquare = Color(0xFFEEDCB3); // Warm beige/cream like wood
-  static const Color darkSquare = Color(0xFF8B6F47); // Rich brown like dark wood
-  static const Color selectedSquare = Color(0xFFB8A882); // Highlighted wood tone
-  static const Color legalMoveIndicator = Color(0x80B8A882);
-  static const Color lastMoveHighlight = Color(0x80D4C4A0);
-  static const Color checkHighlight = Color(0x80FF6B6B);
+  // Chess board colors - 3D Wooden board style (like professional chess sets)
+  static const Color lightSquare = Color(0xFFF0D9B5); // Creamy beige - lighter and warmer
+  static const Color darkSquare = Color(0xFF7B4E2A); // Rich chocolate brown - darker and richer
+  static const Color selectedSquare = Color(0xFFAAA23A); // Golden yellow highlight
+  static const Color legalMoveIndicator = Color(0x80AAA23A); // Semi-transparent golden
+  static const Color lastMoveHighlight = Color(0x80CDD26A); // Soft yellow-green highlight
+  static const Color checkHighlight = Color(0x80FF6B6B); // Red for check
 
   // Dark mode chess board colors
   static const Color lightSquareDark = Color(0xFF4A4A4A);

@@ -64,12 +64,17 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
+                        // Add wooden frame border
+                        border: Border.all(
+                          color: const Color(0xFF5C3A1E), // Dark brown frame
+                          width: 12,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.4),
-                            blurRadius: 25,
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 30,
                             spreadRadius: 5,
-                            offset: const Offset(0, 10),
+                            offset: const Offset(0, 15),
                           ),
                           BoxShadow(
                             color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
@@ -77,6 +82,16 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
                             spreadRadius: -5,
                           ),
                         ],
+                        // Gradient background for frame (wooden texture effect)
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFF6B4423), // Medium brown
+                            const Color(0xFF5C3A1E), // Dark brown
+                            const Color(0xFF4A2F18), // Very dark brown
+                          ],
+                        ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
