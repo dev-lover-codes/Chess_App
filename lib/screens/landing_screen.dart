@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/supabase_service.dart';
-import '../providers/stage_provider.dart';
 import 'stage_selection_screen.dart';
 import 'auth_screen.dart'; // We will create this next
 

@@ -39,7 +39,7 @@ class RandomAI extends ChessAI {
   RandomAI(this.stage);
 
   @override
-  String get name => 'Beginner ${stage}';
+  String get name => 'Beginner $stage';
 
   @override
   int get difficulty => stage;
