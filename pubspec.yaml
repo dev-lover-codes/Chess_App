@@ -47,6 +47,9 @@ dependencies:
   # Google Fonts for beautiful typography
   google_fonts: ^8.0.0
   
+  # Supabase for backend services
+  supabase_flutter: ^2.5.8
+  
   # Crypto for secure password hashing
   crypto: ^3.0.3
 

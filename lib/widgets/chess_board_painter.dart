@@ -214,9 +214,6 @@ class ChessBoardPainter extends CustomPainter {
     }
   }
 
-  // Remove the 3D bevel method entirely or leave empty
-  void _draw3DBevel(Canvas canvas, Rect rect, bool isLight) {}
-
   void _drawLegalMoveIndicators(Canvas canvas, double squareSize) {
     for (final move in legalMoves) {
       final centerX = (move.toCol + 0.5) * squareSize;

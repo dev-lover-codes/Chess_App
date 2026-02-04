@@ -10,6 +10,9 @@ class AppTheme {
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Colors.white70;
 
+  static const Color white10 = Color(0x1AFFFFFF); // White with 10% opacity
+  static const Color white05 = Color(0x0DFFFFFF); // White with 5% opacity
+
   static const LinearGradient purpleGradient = LinearGradient(
     colors: [Color(0xFF9F5AFD), Color(0xFFE990D2)],
     begin: Alignment.topLeft,
@@ -17,7 +20,7 @@ class AppTheme {
   );
 
   static const LinearGradient glassGradient = LinearGradient(
-    colors: [Colors.white10, Colors.white05],
+    colors: [white10, white05],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

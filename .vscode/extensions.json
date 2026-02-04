@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "dart-code.dart-code",
+        "dart-code.flutter",
+        "felixangelov.bloc",
+        "usernamehw.errorlens",
+        "jeroen-meijer.pubspec-assist",
+        "esbenp.prettier-vscode",
+        "yoavbls.pretty-ts-errors"
+    ]
+}

@@ -7,11 +7,9 @@ import '../providers/stage_provider.dart';
 import '../services/audio_service.dart';
 import '../config/game_config.dart';
 import '../widgets/chess_board_widget.dart';
-import '../widgets/move_history_widget.dart';
 import '../widgets/promotion_dialog.dart';
 import '../widgets/game_result_dialog.dart';
 import '../engine/piece.dart';
-import '../engine/chess_engine.dart';
 import '../theme/app_theme.dart';
 
 class GameScreen extends StatefulWidget {
