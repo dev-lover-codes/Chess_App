@@ -2,33 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
+  // New Design Colors
+  static const Color primaryPurple = Color(0xFF8B5CF6); // Violet
+  static const Color secondaryPink = Color(0xFFEC4899); // Pink
+  static const Color darkBackground = Color(0xFF0F0F0F); // Almost black
+  static const Color cardSurface = Color(0xFF1E1E1E);
+  static const Color textPrimary = Colors.white;
+  static const Color textSecondary = Colors.white70;
+
+  static const LinearGradient purpleGradient = LinearGradient(
+    colors: [Color(0xFF9F5AFD), Color(0xFFE990D2)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient glassGradient = LinearGradient(
+    colors: [Colors.white10, Colors.white05],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF769656),
+      seedColor: primaryPurple,
       brightness: Brightness.light,
     ),
-    textTheme: GoogleFonts.interTextTheme(),
+    textTheme: GoogleFonts.outfitTextTheme(), // More modern than Inter for this look
+    scaffoldBackgroundColor: Colors.white,
     cardTheme: CardThemeData(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    ),
-    iconButtonTheme: IconButtonThemeData(
-      style: IconButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        borderRadius: BorderRadius.circular(24),
       ),
     ),
   );
@@ -36,43 +42,38 @@ class AppTheme {
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
+    scaffoldBackgroundColor: darkBackground,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF769656),
+      seedColor: primaryPurple,
       brightness: Brightness.dark,
+      background: darkBackground,
+      surface: cardSurface,
     ),
-    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+    textTheme: GoogleFonts.outfitTextTheme(
+      ThemeData.dark().textTheme.apply(fontFamily: 'Outfit'),
+    ),
     cardTheme: CardThemeData(
-      elevation: 4,
+      color: cardSurface,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        borderRadius: BorderRadius.circular(24),
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        foregroundColor: Colors.white,
       ),
     ),
   );
 
-  // Chess board colors - 3D Wooden board style (like professional chess sets)
-  static const Color lightSquare = Color(0xFFF0D9B5); // Creamy beige - lighter and warmer
-  static const Color darkSquare = Color(0xFF7B4E2A); // Rich chocolate brown - darker and richer
-  static const Color selectedSquare = Color(0xFFAAA23A); // Golden yellow highlight
-  static const Color legalMoveIndicator = Color(0x80AAA23A); // Semi-transparent golden
-  static const Color lastMoveHighlight = Color(0x80CDD26A); // Soft yellow-green highlight
-  static const Color checkHighlight = Color(0x80FF6B6B); // Red for check
+  // Chess board colors
+  static const Color lightSquare = Color(0xFFF0D9B5);
+  static const Color darkSquare = Color(0xFF7B4E2A);
+  static const Color selectedSquare = Color(0xFFAAA23A);
+  static const Color legalMoveIndicator = Color(0x80AAA23A);
+  static const Color lastMoveHighlight = Color(0x80CDD26A);
+  static const Color checkHighlight = Color(0x80FF6B6B);
 
-  // Dark mode chess board colors
   static const Color lightSquareDark = Color(0xFF4A4A4A);
   static const Color darkSquareDark = Color(0xFF2B2B2B);
   static const Color selectedSquareDark = Color(0xFF5A7A4A);

@@ -156,64 +156,39 @@ class ChessBoardPainter extends CustomPainter {
         Color squareColor;
         final isLight = (row + col) % 2 == 0;
         
+        // Use design defined colors
         if (isDarkMode) {
-          squareColor = isLight ? AppTheme.lightSquareDark : AppTheme.darkSquareDark;
+          // Use specific colors from the design image (approximated)
+          squareColor = isLight ? const Color(0xFFE8E8E8) : const Color(0xFFC0C5CF); // Lighter blue-grey for dark squares, almost white for light
+          // Actually looking at the image:
+          // Dark squares are distinct blue-ish grey (#50597b maybe?), Light squares are white
+          squareColor = isLight ? Colors.white : const Color(0xFF777F99);
         } else {
-          squareColor = isLight ? AppTheme.lightSquare : AppTheme.darkSquare;
+           squareColor = isLight ? Colors.white : const Color(0xFF777F99);
         }
 
-        // Draw base square with wood grain effect
-        final woodGrainPaint = Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              squareColor,
-              squareColor.withOpacity(0.95),
-              squareColor.withOpacity(0.98),
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ).createShader(rect);
-        canvas.drawRect(rect, woodGrainPaint);
-
-        // Add 3D bevel effect on edges
-        _draw3DBevel(canvas, rect, isLight);
+        final paint = Paint()..color = squareColor;
+        canvas.drawRect(rect, paint);
 
         // Highlight last move with subtle glow
         if (lastMove != null &&
             ((lastMove!.fromRow == row && lastMove!.fromCol == col) ||
                 (lastMove!.toRow == row && lastMove!.toCol == col))) {
-          final highlightColor = isDarkMode
-              ? AppTheme.lastMoveHighlightDark
-              : AppTheme.lastMoveHighlight;
+           final highlightColor = Colors.yellow.withOpacity(0.4);
           
           final glowPaint = Paint()
-            ..shader = RadialGradient(
-              colors: [
-                highlightColor,
-                highlightColor.withOpacity(0.3),
-              ],
-            ).createShader(rect);
+            ..color = highlightColor;
           canvas.drawRect(rect, glowPaint);
         }
 
         // Highlight selected square
         if (selectedRow == row && selectedCol == col) {
-          final selectedColor = isDarkMode
-              ? AppTheme.selectedSquareDark
-              : AppTheme.selectedSquare;
+           final selectedColor = const Color(0xFF6C63FF).withOpacity(0.5); // Purple highlight
           
           final paint = Paint()
             ..color = selectedColor
             ..style = PaintingStyle.fill;
           canvas.drawRect(rect, paint);
-          
-          // Add border glow
-          final borderPaint = Paint()
-            ..color = selectedColor.withOpacity(0.8)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3;
-          canvas.drawRect(rect.deflate(1.5), borderPaint);
         }
 
         // Check if king is in check - add red glow
@@ -221,9 +196,7 @@ class ChessBoardPainter extends CustomPainter {
         if (piece != null && piece.type == PieceType.king) {
           final status = engine.getGameStatus();
           if (status == GameStatus.check && piece.color == engine.currentTurn) {
-            final checkColor = isDarkMode
-                ? AppTheme.checkHighlightDark
-                : AppTheme.checkHighlight;
+             final checkColor = Colors.red.withOpacity(0.5);
             
             final glowPaint = Paint()
               ..shader = RadialGradient(
@@ -241,67 +214,8 @@ class ChessBoardPainter extends CustomPainter {
     }
   }
 
-  // Draw enhanced 3D bevel effect for professional wooden board look
-  void _draw3DBevel(Canvas canvas, Rect rect, bool isLight) {
-    // Add inner shadow for depth
-    final innerShadowPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.black.withOpacity(0.15),
-          Colors.transparent,
-        ],
-      ).createShader(rect);
-    
-    final innerShadowRect = Rect.fromLTWH(
-      rect.left + 1,
-      rect.top + 1,
-      rect.width - 2,
-      rect.height - 2,
-    );
-    canvas.drawRect(innerShadowRect, innerShadowPaint);
-    
-    // Top-left highlight (light edge) - more pronounced
-    final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(isLight ? 0.25 : 0.15)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    
-    final highlightPath = Path()
-      ..moveTo(rect.left, rect.bottom)
-      ..lineTo(rect.left, rect.top)
-      ..lineTo(rect.right, rect.top);
-    canvas.drawPath(highlightPath, highlightPaint);
-
-    // Bottom-right shadow (dark edge) - deeper shadow
-    final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(isLight ? 0.20 : 0.30)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    
-    final shadowPath = Path()
-      ..moveTo(rect.right, rect.top)
-      ..lineTo(rect.right, rect.bottom)
-      ..lineTo(rect.left, rect.bottom);
-    canvas.drawPath(shadowPath, shadowPaint);
-    
-    // Add subtle inner highlight on top-left corner
-    final cornerHighlightPaint = Paint()
-      ..color = Colors.white.withOpacity(isLight ? 0.15 : 0.08)
-      ..strokeWidth = 1.0;
-    
-    canvas.drawLine(
-      Offset(rect.left + 2, rect.top + 2),
-      Offset(rect.left + rect.width * 0.3, rect.top + 2),
-      cornerHighlightPaint,
-    );
-    canvas.drawLine(
-      Offset(rect.left + 2, rect.top + 2),
-      Offset(rect.left + 2, rect.top + rect.height * 0.3),
-      cornerHighlightPaint,
-    );
-  }
+  // Remove the 3D bevel method entirely or leave empty
+  void _draw3DBevel(Canvas canvas, Rect rect, bool isLight) {}
 
   void _drawLegalMoveIndicators(Canvas canvas, double squareSize) {
     for (final move in legalMoves) {

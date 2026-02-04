@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/stage_provider.dart';
-import 'screens/landing_screen.dart';
+import 'screens/home_screen.dart';
 import 'services/local_auth_service.dart';
 import 'theme/app_theme.dart';
 
@@ -34,8 +34,8 @@ class ChessMasterApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: provider.darkMode ? ThemeMode.dark : ThemeMode.light,
-            home: const LandingScreen(),
+            themeMode: ThemeMode.dark, // Force dark mode for now to match design or use provider
+            home: const HomeScreen(),
           );
         },
       ),

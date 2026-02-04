@@ -63,38 +63,23 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
                     scale: state.selectedRow != null ? _scaleAnimation.value : 1.0,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        // Add wooden frame border
+                        borderRadius: BorderRadius.circular(4),
+                        // Dark modern board border
                         border: Border.all(
-                          color: const Color(0xFF5C3A1E), // Dark brown frame
-                          width: 12,
+                          color: const Color(0xFF2A2A2A),
+                          width: 8,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 30,
-                            spreadRadius: 5,
-                            offset: const Offset(0, 15),
-                          ),
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                            blurRadius: 40,
-                            spreadRadius: -5,
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 15,
+                            spreadRadius: 2,
                           ),
                         ],
-                        // Gradient background for frame (wooden texture effect)
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFF6B4423), // Medium brown
-                            const Color(0xFF5C3A1E), // Dark brown
-                            const Color(0xFF4A2F18), // Very dark brown
-                          ],
-                        ),
+                        color: const Color(0xFF1A1A1A),
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(4),
                         child: GestureDetector(
                           onTapUp: (details) {
                             if (state.isAIThinking || state.isGameOver) return;

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
 import '../providers/stage_provider.dart';
 import '../services/audio_service.dart';
@@ -11,6 +12,7 @@ import '../widgets/promotion_dialog.dart';
 import '../widgets/game_result_dialog.dart';
 import '../engine/piece.dart';
 import '../engine/chess_engine.dart';
+import '../theme/app_theme.dart';
 
 class GameScreen extends StatefulWidget {
   final int stage;
@@ -35,7 +37,6 @@ class _GameScreenState extends State<GameScreen> {
       onGameEvent: _handleGameEvent,
     );
     
-    // Start AI move if AI plays first (not in this game, but for future)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _gameProvider.startAIMove();
     });
@@ -137,324 +138,132 @@ class _GameScreenState extends State<GameScreen> {
     return ChangeNotifierProvider.value(
       value: _gameProvider,
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: _buildGlassIconBtn(
-              icon: Icons.arrow_back_ios_new,
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          centerTitle: true,
-          title: _buildGlassContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Text(
-              'Stage ${widget.stage}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: _buildGlassIconBtn(
-                icon: Icons.history,
-                onPressed: _showHistorySheet,
-              ),
-            ),
-          ],
-        ),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Theme.of(context).colorScheme.surface,
-                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-              ],
-            ),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Stack(
-              children: [
-                // 1. Board Centered
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: const ChessBoardWidget(),
-                  ),
-                ),
-
-                // 2. Info Panel (Floating Top)
-                Positioned(
-                  top: 10,
-                  left: 20,
-                  right: 20,
-                  child: _buildInfoPanel(),
-                ),
-
-                // 3. Controls (Floating Bottom)
-                Positioned(
-                  bottom: 30,
-                  left: 20,
-                  right: 20,
-                  child: _buildFloatingControls(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlassContainer({required Widget child, EdgeInsets? padding}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: padding ?? const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildGlassIconBtn({required IconData icon, required VoidCallback onPressed}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: Container(
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
-          child: IconButton(
-            icon: Icon(icon, size: 20),
-            onPressed: onPressed,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoPanel() {
-    return Consumer<GameProvider>(
-      builder: (context, gameProvider, child) {
-        final state = gameProvider.state;
-        String statusText;
-        Color statusColor = Theme.of(context).colorScheme.onSurface;
-        IconData statusIcon = Icons.info_outline;
-
-        if (state.isAIThinking) {
-          statusText = 'AI Thinking...';
-          statusIcon = Icons.psychology;
-        } else if (state.status == GameStatus.check) {
-          statusText = 'Check!';
-          statusColor = Colors.red;
-          statusIcon = Icons.warning_amber_rounded;
-        } else if (state.status == GameStatus.checkmate) {
-          statusText = state.isPlayerTurn ? 'Defeat' : 'Victory!';
-          statusColor = state.isPlayerTurn ? Colors.red : Colors.green;
-          statusIcon = Icons.emoji_events;
-        } else {
-          statusText = state.isPlayerTurn ? 'Your Turn' : 'Opponent\'s Turn';
-          statusIcon = state.isPlayerTurn ? Icons.person : Icons.computer;
-        }
-
-        return _buildGlassContainer(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(statusIcon, color: statusColor),
-              const SizedBox(width: 10),
-              Text(
-                statusText,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: statusColor,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFloatingControls() {
-    return _buildGlassContainer(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildControlButton(
-            icon: Icons.undo,
-            label: 'Undo',
-            onPressed: _gameProvider.state.canUndo ? _gameProvider.undoMove : null,
-          ),
-           _buildControlButton(
-             icon: Icons.lightbulb_outline,
-            label: 'Hint',
-            onPressed: () => _showHint(),
-           ),
-          _buildControlButton(
-            icon: Icons.refresh,
-            label: 'Restart',
-            onPressed: _gameProvider.resetGame,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildControlButton({required IconData icon, required String label, VoidCallback? onPressed}) {
-    final isEnabled = onPressed != null;
-    return Opacity(
-      opacity: isEnabled ? 1.0 : 0.5,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        backgroundColor: AppTheme.darkBackground,
+        body: SafeArea(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
+              // 1. Top Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.menu, color: Colors.white70)),
+                    Row(
+                      children: [
+                        IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.notifications_none, color: Colors.white70)),
+                        IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close, color: Colors.white70)),
+                      ],
+                    )
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  void _showHistorySheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text(
-              'Move History',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            const Expanded(child: MoveHistoryWidget()),
-          ],
-        ),
-      ),
-    );
-  }
+              const SizedBox(height: 10),
 
-  Future<void> _showHint() async {
-    final config = GameConfig.getStage(widget.stage);
-    if (!config.hintsAllowed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.lock, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Hints are not allowed in this stage')),
-            ],
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      return;
-    }
-
-    // Show loading indicator
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              // 2. Opponent Profile
+              _buildProfileCard(
+                name: "Calvin McDaniel",
+                title: "Jazz player", // Placeholder
+                isOpponent: true,
               ),
-            ),
-            SizedBox(width: 12),
-            Text('Calculating best move...'),
-          ],
-        ),
-        duration: const Duration(seconds: 10),
-        backgroundColor: Colors.blue.shade700,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
 
-    final hint = await _gameProvider.getHint();
-    
-    // Clear loading snackbar
-    ScaffoldMessenger.of(context).clearSnackBars();
-    
-    if (hint != null && mounted) {
-      // Show hint VISUALLY on the board with green arrow
-      _gameProvider.showHintOnBoard(hint);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.lightbulb, color: Colors.amber),
-              const SizedBox(width: 12),
-              Expanded(
+              const Spacer(),
+
+              // 3. Chess Board
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Consumer<GameProvider>(
+                  builder: (context, provider, _) { 
+                    // Use a Container with transform for 'perspective' look if needed
+                    // For now, standard board but styled cleanly
+                    return Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                           BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 50,
+                            offset: const Offset(0, 20),
+                            spreadRadius: 0
+                           )
+                        ]
+                      ),
+                      child: const ChessBoardWidget()
+                    );
+                  }
+                ),
+              ),
+
+              const Spacer(),
+
+              // 4. Player Profile & Actions
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(32),
+                   border: Border.all(color: Colors.white.withOpacity(0.05)),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Hint shown on board!',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    // Player Info
+                     Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: const DecorationImage(
+                              image: NetworkImage("https://i.pravatar.cc/150?u=david"), // Placeholder
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "David Moody",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              "Ordinary player",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white38,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Move: ${hint.toAlgebraic()}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 14,
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Action Buttons (Chat, Stats, Notes, Flag)
+                    Theme(
+                      data: ThemeData.dark(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                           _buildActionButton(Icons.chat_bubble_outline),
+                           _buildActionButton(Icons.show_chart),
+                           _buildActionButton(Icons.assignment_outlined),
+                           _buildActionButton(Icons.flag_outlined, color: Colors.red.withOpacity(0.7)),
+                        ],
                       ),
                     ),
                   ],
@@ -462,47 +271,65 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ],
           ),
-          duration: const Duration(seconds: 5),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          action: SnackBarAction(
-            label: 'Clear',
-            textColor: Colors.white,
-            onPressed: () {
-              _gameProvider.clearHint();
-            },
-          ),
         ),
-      );
-      
-      // Auto-clear hint after 5 seconds
-      Future.delayed(const Duration(seconds: 5), () {
-        if (mounted) {
-          _gameProvider.clearHint();
-        }
-      });
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('No hint available')),
-            ],
-          ),
-          backgroundColor: Colors.orange.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-    }
+      ),
+    );
   }
 
-  @override
-  void dispose() {
-    _gameProvider.dispose();
-    super.dispose();
+  Widget _buildProfileCard({required String name, required String title, bool isOpponent = false}) {
+     return Padding(
+       padding: const EdgeInsets.symmetric(horizontal: 24.0),
+       child: Row(
+        mainAxisAlignment: isOpponent ? MainAxisAlignment.center : MainAxisAlignment.start,
+         children: [
+            // Simplified opponent view for now to match top part of design
+            if (isOpponent)
+               Expanded(
+                 child: Column(
+                   children: [
+                     Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            image: const DecorationImage(
+                              image: NetworkImage("https://i.pravatar.cc/150?u=calvin"), // Placeholder
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      Text(
+                          name,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white38,
+                            fontSize: 13,
+                          ),
+                        ),
+                   ],
+                 ),
+               ),
+         ],
+       ),
+     );
+  }
+
+  Widget _buildActionButton(IconData icon, {Color? color}) {
+    return IconButton(
+      onPressed: () {},
+      icon: Icon(icon, color: color ?? Colors.white54, size: 22),
+      style: IconButton.styleFrom(
+        padding: const EdgeInsets.all(12),
+        backgroundColor: Colors.transparent, // Or minimal background
+      ),
+    );
   }
 }
