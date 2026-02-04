@@ -42,11 +42,13 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # Audio playback
-  audioplayers: ^5.2.1
+  audioplayers: ^6.5.1
   
   # Google Fonts for beautiful typography
-  google_fonts: ^6.1.0
-  supabase_flutter: ^2.12.0
+  google_fonts: ^8.0.0
+  
+  # Crypto for secure password hashing
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

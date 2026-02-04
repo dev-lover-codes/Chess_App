@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/supabase_service.dart';
+import '../services/local_auth_service.dart';
 import '../providers/stage_provider.dart';
 import 'stage_selection_screen.dart';
 
@@ -31,47 +30,62 @@ class _AuthScreenState extends State<AuthScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    final supabase = SupabaseService();
+    final authService = LocalAuthService();
 
     try {
-      AuthResponse response;
+      Map<String, dynamic> result;
+      
       if (_isSignUp) {
-        response = await supabase.signUp(
+        // Sign Up
+        result = await authService.signUp(
           _emailController.text.trim(),
           _passwordController.text,
         );
+        
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account created! Sign in to continue.')),
-          );
-          // Auto switch to sign in or just proceed depending on email confirmation settings
-          // For now, let's assume auto-login or switch to sign in
-          setState(() => _isSignUp = false);
+          if (result['success'] == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Account created!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            // Switch to sign in
+            setState(() => _isSignUp = false);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Sign up failed'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       } else {
-        response = await supabase.signIn(
+        // Sign In
+        result = await authService.signIn(
           _emailController.text.trim(),
           _passwordController.text,
         );
-        if (mounted && response.session != null) {
-          // Success!
-          // Load user progress
-          _loadUserProgress();
-          
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const StageSelectionScreen()),
-            (route) => false,
-          );
+        
+        if (mounted) {
+          if (result['success'] == true) {
+            // Success! Load user progress
+            await _loadUserProgress();
+            
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const StageSelectionScreen()),
+              (route) => false,
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Sign in failed'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
-      }
-    } on AuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     } catch (e) {
       if (mounted) {
@@ -88,15 +102,15 @@ class _AuthScreenState extends State<AuthScreen> {
   }
   
   Future<void> _loadUserProgress() async {
-    final supabase = SupabaseService();
-    final data = await supabase.loadProgress();
+    final authService = LocalAuthService();
+    final data = await authService.loadProgress();
+    
     if (data != null && mounted) {
       final stageProvider = Provider.of<StageProvider>(context, listen: false);
-      // Update provider with cloud data
-      // (This requires updating StageProvider to expose a setter or method for this)
-      // For now, we will assume this part is handled later or we add a method
-      if (data['completed_stage'] != null) {
-        stageProvider.syncFromCloud(data['completed_stage']);
+      
+      // Update provider with local data
+      if (data['completedStage'] != null) {
+        stageProvider.syncFromCloud(data['completedStage']);
       }
     }
   }

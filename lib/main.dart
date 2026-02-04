@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/stage_provider.dart';
 import 'screens/landing_screen.dart';
-import 'services/supabase_service.dart';
+import 'services/local_auth_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Supabase
-  await SupabaseService().initialize();
+  // Initialize Local Auth Service
+  await LocalAuthService().initialize();
 
   // Load local progress
   final stageProvider = StageProvider();

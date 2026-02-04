@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/game_config.dart';
-import '../services/supabase_service.dart';
+import '../services/local_auth_service.dart';
 
 class StageProvider extends ChangeNotifier {
   Set<int> _completedStages = {};
@@ -55,26 +55,26 @@ class StageProvider extends ChangeNotifier {
     final completedList = _completedStages.map((s) => s.toString()).toList();
     await prefs.setStringList(GameConfig.storageKeyProgress, completedList);
 
-    // Sync to Cloud
+    // Sync to Local Auth Storage (if logged in)
     final highestStage = _completedStages.isEmpty 
         ? 0 
         : _completedStages.reduce((a, b) => a > b ? a : b);
     
     try {
-      final supabase = SupabaseService();
-      if (supabase.isAuthenticated) {
-        await supabase.syncProgress(highestStage, _soundEnabled, _darkMode);
+      final authService = LocalAuthService();
+      if (authService.isAuthenticated) {
+        await authService.syncProgress(highestStage, _soundEnabled, _darkMode);
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Cloud sync failed: $e');
+        print('User progress sync failed: $e');
       }
     }
   }
   
   // Call this from AuthScreen after successful login
   Future<void> syncFromCloud(int highestCompletedStage) async {
-    // If cloud has higher progress, update local
+    // If user account has higher progress, update local
     // Assuming linear progression: if stage 5 is done, 1-4 are done.
     bool changed = false;
     for (int i = 1; i <= highestCompletedStage; i++) {
